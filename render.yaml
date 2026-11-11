@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: agentpay
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/config
+    envVars:
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: AGENTPAY_API_KEY
+        generateValue: true
+      - key: PAYPAL_BASE
+        value: https://api-m.sandbox.paypal.com
+      - key: DEMO_FUNDING
+        value: "true"
+      - key: AGENT_B_EMAIL
+        sync: false
+      - key: BUDGET_SELLER_EMAIL
+        sync: false
+      - key: WALLET_MODE
+        value: per-visitor
+      - key: MAX_RUNS_PER_DAY
+        value: "20"
+      - key: MAX_RUNS_PER_WALLET_PER_DAY
+        value: "4"

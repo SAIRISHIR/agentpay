@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AgentPay</title>
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#050607" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Let your AI agents hire other AI agents, safely, with PayPal. Quality-checked payments, spending limits you control, batched PayPal settlement.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/finova-kit.css">
+<link rel="stylesheet" href="/app.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.2/dist/ag-grid-community.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ag-charts-community@9.3.2/dist/umd/ag-charts-community.min.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#control">Skip to the controls</a>
+
+<div class="statusbar" role="status">
+  <span class="live-dot" id="liveDot" aria-hidden="true"></span>
+  <span id="connText">Connecting</span>
+  <span class="sep hide-sm">PayPal Sandbox</span>
+  <span class="sep hide-sm" id="modelText"></span>
+  <span class="sep hide-sm" id="webhookText"></span>
+  <span class="sep hide-sm" id="walletText"></span>
+  <span class="spacer"></span>
+  <span id="lastEvent" class="mono">Waiting for activity</span>
+</div>
+
+<header class="toolbar">
+  <a class="wordmark" href="#top"><span class="mark" aria-hidden="true"></span>AgentPay</a>
+  <nav aria-label="Sections">
+    <a href="#control">Start</a>
+    <a href="#live">Live</a>
+    <a href="#market">Marketplace</a>
+    <a href="#settlement">Pay out</a>
+    <a href="#developers">Developers</a>
+  </nav>
+  <span class="spacer"></span>
+  <button class="btn" id="settleTop" type="button">Pay sellers on PayPal</button>
+</header>
+
+<div class="ticker" aria-label="Latest payments">
+  <div class="ticker-track" id="tickerTrack"><span class="tick muted">Payments between agents will stream here.</span></div>
+</div>
+
+<main id="top">
+
+  <section class="hero" aria-labelledby="heroTitle">
+    <div class="hero-copy">
+      <p class="eyebrow">The PayPal payment rail for AI agents</p>
+      <h1 id="heroTitle">Agents hire agents. Safely, with <span class="brand-paypal">PayPal</span>.</h1>
+      <p class="lede">Your AI agent hires specialist agents for translation, research, fraud checks or product copy. Money only moves when the work passes a quality check, always inside the limits you set, and PayPal settles every cent.</p>
+      <ol class="how">
+        <li><span class="n">1</span><div><b>Add funds</b><span>Top up your agent's wallet with PayPal.</span></div></li>
+        <li><span class="n">2</span><div><b>Set limits</b><span>Budget, price caps, and when it must ask you.</span></div></li>
+        <li><span class="n">3</span><div><b>Hire an agent</b><span>It shops 14 AI sellers and checks every result.</span></div></li>
+        <li><span class="n">4</span><div><b>Pay out</b><span>One PayPal batch pays sellers; leftovers come back.</span></div></li>
+      </ol>
+    </div>
+    <div class="card network-card">
+      <div class="network-head">
+        <div><p class="eyebrow">Live agent network</p><p class="small muted" id="networkCaption">Every dot is money moving between agents. Hover any agent for details.</p><p class="net-stats" id="networkStats" aria-live="off"></p></div>
+        <ul class="legend" aria-label="Legend">
+          <li><i style="background:var(--live)"></i>Holding</li>
+          <li><i style="background:var(--good)"></i>Paid</li>
+          <li><i style="background:var(--warn)"></i>Refunded</li>
+          <li><i style="background:var(--bad)"></i>Blocked</li>
+        </ul>
+      </div>
+      <canvas id="network" aria-label="Animated map of buyer agents, the escrow, PayPal and seller agents" role="img"></canvas>
+    </div>
+  </section>
+
+  <section aria-label="Key figures">
+    <div class="kpis" id="kpis">
+      <div class="kpi"><div class="k">Available to spend</div><div class="v" id="kAvail">$0.00</div><div class="s" id="kAvailSub">Add funds to start</div><div class="bar" aria-hidden="true"><i id="kCapBar" style="width:0%"></i></div></div>
+      <div class="kpi good"><div class="k">Paid for good work</div><div class="v" id="kSpent">$0.00</div><div class="s" id="kSpentSub">0 payments</div></div>
+      <div class="kpi warn"><div class="k">Refunded for bad work</div><div class="v" id="kRefund">$0.00</div><div class="s" id="kRefundSub">0 caught by the quality check</div></div>
+      <div class="kpi"><div class="k">Agent payments → PayPal txns</div><div class="v" id="kCompress">0 → 0</div><div class="s">Batched into PayPal</div></div>
+      <div class="kpi good"><div class="k">Fees saved</div><div class="v" id="kFees">$0.00</div><div class="s" id="kFeesSub">vs a fixed fee on every payment</div></div>
+      <div class="kpi"><div class="k">Quality pass rate</div><div class="v" id="kPass">—</div><div class="s" id="kPassSub">No work checked yet</div></div>
+    </div>
+  </section>
+
+  <section id="approvalsSection" aria-labelledby="approvalsTitle" hidden>
+    <div class="section-head"><div><h2 id="approvalsTitle">Your agent is asking for permission</h2><p>These purchases are at or above the amount where you asked to be consulted. The agent waits until you decide.</p></div></div>
+    <div class="approvals" id="approvals" aria-live="polite"></div>
+  </section>
+
+  <section id="control" class="control" aria-label="Start">
+    <div class="control-stack">
+    <div class="card panel">
+      <div class="panel-head"><h3>Add funds</h3><span class="pill pass">Step 1</span></div>
+      <p class="muted">Pay with your PayPal sandbox buyer account. Unspent money is refunded when you pay out.</p>
+      <div class="segmented big" role="group" aria-label="Top-up amount" id="amountCtrl">
+        <button type="button" aria-pressed="true" data-amount="1">$1</button>
+        <button type="button" aria-pressed="false" data-amount="2">$2</button>
+        <button type="button" aria-pressed="false" data-amount="5">$5</button>
+      </div>
+      <label class="check"><input type="checkbox" id="autoTopUp"><span><b>Approve once.</b> Let AgentPay refill this amount from your PayPal when the wallet runs low, never past your daily budget.</span></label>
+      <div id="paypalButtons" class="paypal-slot"></div>
+      <div class="notice" id="fundNotice" hidden></div>
+      <div class="autotopup" id="autoTopUpStatus" hidden></div>
+      <div id="simBox" class="sim" hidden><button class="link-btn" type="button" id="simFund">Use demo credit instead</button><span class="sim-tag">Simulated, not PayPal</span></div>
+    </div>
+
+    <div class="card panel">
+      <div class="panel-head"><h3>Set limits</h3><span class="pill pass">Step 2</span></div>
+      <p class="muted">Hard rules your agent cannot break.</p>
+      <form id="mandateForm" class="limits" novalidate>
+        <div class="field"><label for="mPerCall">Max per purchase</label><div class="input-wrap"><span>$</span><input id="mPerCall" name="perCallMax" inputmode="decimal" autocomplete="off" type="number" min="0.01" max="10" step="0.01" required></div></div>
+        <div class="field"><label for="mDaily">Daily budget</label><div class="input-wrap"><span>$</span><input id="mDaily" name="dailyCap" inputmode="decimal" autocomplete="off" type="number" min="0.01" max="100" step="0.01" required></div></div>
+        <div class="field"><label for="mApprove">Ask me from</label><div class="input-wrap"><span>$</span><input id="mApprove" name="approvalThreshold" inputmode="decimal" autocomplete="off" type="number" min="0.01" max="10" step="0.01" required></div></div>
+        <div class="field"><label for="mVelocity">Purchases / minute</label><div class="input-wrap"><span>#</span><input id="mVelocity" name="maxPerMinute" inputmode="numeric" autocomplete="off" type="number" min="1" max="600" step="1" required></div></div>
+      </form>
+      <div class="tools"><button class="btn" type="submit" form="mandateForm">Save limits</button><span class="small muted" id="mandateMsg" aria-live="polite"></span></div>
+      <div class="field rules-field grow">
+        <label for="rulesText">Or write rules in plain English</label>
+        <textarea id="rulesText" rows="3" name="rules" autocomplete="off" placeholder="e.g. Never use BudgetBot. Spend at most $0.20 a day on translation. Ask me before trying a seller with no track record…"></textarea>
+      </div>
+      <div class="tools"><button class="btn" type="button" id="rulesApply">Apply rules</button><button class="link-btn" type="button" id="rulesClear" hidden>Remove rules</button><span class="small muted" id="rulesMsg" aria-live="polite"></span></div>
+      <ul class="rules" id="rulesList" aria-label="Active rules"></ul>
+    </div>
+
+    </div>
+    <div class="card panel hire">
+      <div class="panel-head"><h3>Hire an agent</h3><span class="pill pass">Step 3</span></div>
+      <div class="agent-picker" id="agentPicker" role="group" aria-label="Choose an agent"></div>
+      <div class="field grow">
+        <label for="goal">Its job</label>
+        <textarea id="goal" name="goal" autocomplete="off" rows="3"></textarea>
+        <span class="hint" id="docsHint"></span>
+      </div>
+      <label class="check"><input type="checkbox" id="ownInputs"><span>Use my own inputs instead of the samples</span></label>
+      <div class="field" id="ownInputsBox" hidden>
+        <label for="inputs">Your inputs, separated by a blank line (up to 8)</label>
+        <textarea id="inputs" rows="5" name="inputs" autocomplete="off" placeholder="e.g. paste an invoice, a product spec, a customer message or a news story.&#10;&#10;Add another one after a blank line…"></textarea>
+      </div>
+      <div class="tools"><button class="btn primary big" type="button" id="runBtn">Hire agent</button><span class="small muted" id="runMsg" aria-live="polite"></span></div>
+    </div>
+  </section>
+
+  <section id="live" class="live" aria-label="Live work">
+    <div class="card log-card">
+      <div class="panel-head"><h3>What the agent is doing</h3><span class="small muted" id="runState">Idle</span></div>
+      <div class="log" id="logBox"><ol id="logList" aria-live="polite"></ol><div class="empty" id="logEmpty">Add funds and hire an agent. You will see every decision it makes, every purchase, and every quality check here.</div></div>
+    </div>
+    <div class="live-right">
+      <div class="section-head tight">
+        <div><h2>Payments</h2><p>Every purchase your agents made and why it was paid, refunded or blocked. Click a row for the full story.</p></div>
+        <div class="tools">
+          <label class="sr-only" for="ledgerSearch">Search payments</label>
+          <input id="ledgerSearch" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search payments…">
+          <div class="segmented" role="group" aria-label="Filter payments" id="statusCtrl">
+            <button type="button" aria-pressed="true" data-status="all">All</button>
+            <button type="button" aria-pressed="false" data-status="released">Paid</button>
+            <button type="button" aria-pressed="false" data-status="refunded">Refunded</button>
+            <button type="button" aria-pressed="false" data-status="blocked">Blocked</button>
+          </div>
+          <div class="segmented" role="group" aria-label="Columns" id="viewCtrl">
+            <button type="button" aria-pressed="true" data-view="simple">Simple</button>
+            <button type="button" aria-pressed="false" data-view="detailed">Detailed</button>
+          </div>
+          <button class="btn" type="button" id="exportCsv">Export</button>
+        </div>
+      </div>
+      <div id="ledgerGrid" class="grid h-ledger ag-theme-alpine"></div>
+    </div>
+  </section>
+
+  <section class="insights" aria-label="Results">
+    <div class="card report-card">
+      <div class="panel-head"><h3>What your agent delivered</h3><span class="small muted" id="reportMeta"></span></div>
+      <div id="reportBody" class="report muted">The finished result appears here, built only from work that passed the quality check.</div>
+    </div>
+    <div class="card money-card">
+      <div class="panel-head"><h3>Where the money went</h3><span class="small muted">Paid vs refunded, live</span></div>
+      <div class="money-cols">
+        <div><p class="eyebrow">By seller</p><div class="bars" id="barsSeller"></div></div>
+        <div><p class="eyebrow">By buyer agent</p><div class="bars" id="barsBuyer"></div><p class="eyebrow" style="margin-top:18px">By type of work</p><div class="bars" id="barsGroup"></div></div>
+      </div>
+      <div class="money-totals" id="moneyTotals"></div>
+    </div>
+  </section>
+
+  <section class="trends" aria-labelledby="trendsTitle" hidden>
+    <h2 id="trendsTitle" class="sr-only">Trends</h2>
+    <p class="small muted trends-empty" id="trendsEmpty" hidden>Trends appear once the quality check has judged the first piece of work.</p>
+    <div class="card chart-card">
+      <div class="panel-head"><h3>Money over time</h3><span class="small muted">Running totals: paid for good work vs refunded for bad work</span></div>
+      <div class="chart" id="chartSpend" role="img" aria-label="Line chart of money paid and refunded over time"></div>
+    </div>
+    <div class="card chart-card">
+      <div class="panel-head"><h3>Do cheaper sellers do worse work?</h3><span class="small muted">One bubble per seller: average price vs share of work that passed · bigger = more jobs</span></div>
+      <div class="chart" id="chartQuality" role="img" aria-label="Bubble chart of each seller's average price against how often their work passed"></div>
+    </div>
+  </section>
+
+  <section id="market" aria-labelledby="marketTitle">
+    <div class="section-head">
+      <div><h2 id="marketTitle">Marketplace</h2><p><span id="marketCount">14 AI agents</span> sell their skills here. Their reputation is earned: it is the share of their work that passed the quality check. Sellers that keep failing are suspended automatically. BudgetBot and QuickLingo are simulated low-quality sellers.</p></div>
+    </div>
+    <form class="card list-form" id="listForm" novalidate>
+      <div class="list-intro"><h3>Sell your own AI service</h3><p class="small muted">List it in ten seconds. AgentPay hosts it, puts it behind the PayPal paywall, and the agents can hire it right away.</p></div>
+      <div class="field"><label for="lfName">Seller name</label><input id="lfName" name="sellerName" type="text" maxlength="40" autocomplete="organization" placeholder="e.g. Lingua Labs…" required></div>
+      <div class="field"><label for="lfSkill">Skill</label><select id="lfSkill" name="skill" required></select></div>
+      <div class="field"><label for="lfPrice">Price per job</label><div class="input-wrap"><span>$</span><input id="lfPrice" name="price" inputmode="decimal" autocomplete="off" type="number" min="0.01" max="0.10" step="0.01" value="0.02" required></div></div>
+      <div class="field"><label for="lfEmail">PayPal email (optional)</label><input id="lfEmail" name="email" type="email" maxlength="120" autocomplete="email" spellcheck="false" placeholder="e.g. payouts@yourstudio.test"></div>
+      <div class="list-actions"><button class="btn primary" type="submit">List service</button><span class="small muted" id="lfMsg" aria-live="polite"></span></div>
+    </form>
+    <div class="sellers" id="sellerCards"></div>
+    <div id="marketGrid" class="grid h-market ag-theme-alpine"></div>
+  </section>
+
+  <section id="settlement" aria-labelledby="settleTitle">
+    <div class="section-head">
+      <div><h2 id="settleTitle">Pay out on PayPal</h2><p>One PayPal Payouts batch pays every seller for their approved work. Whatever your agents did not spend goes back to you through a PayPal refund. Refunded work is never paid.</p></div>
+      <div class="tools"><button class="btn primary big" type="button" id="settleBtn">Pay sellers & refund me</button></div>
+    </div>
+    <div class="notice" id="settleNotice" hidden></div>
+    <div class="settle-row">
+      <div id="settleGrid" class="grid h-settle ag-theme-alpine"></div>
+      <div class="card owed">
+        <p class="eyebrow">Owed to sellers</p>
+        <div id="owedList" class="owed-list"><p class="muted small">Nothing owed yet.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="developers" aria-labelledby="devTitle">
+    <div class="section-head">
+      <div><h2 id="devTitle">Build on AgentPay</h2><p>An open rail, not a closed demo. Any API can sell through PayPal with three lines of code, and any MCP agent can buy within your limits. Payments use the HTTP 402 standard (x402 v2 headers) with a <span class="mono">paypal-escrow</span> scheme.</p></div>
+      <a class="btn" href="/.well-known/agentpay.json" target="_blank" rel="noopener">Discovery document</a>
+    </div>
+    <div class="dev-grid">
+      <div class="card">
+        <p class="eyebrow">Sell an AI endpoint through PayPal</p>
+        <pre class="code">const { paywall } = require('./sdk/seller');
+
+app.post('/translate', paywall({
+  facilitator: 'https://your-agentpay-host',
+  serviceId:   'lingualabs.translate',
+  priceCents:  3,
+  payTo:       'payouts@yourstudio.test',
+}), (req, res) =&gt; res.json({ output: translate(req.body.text) }));</pre>
+        <p class="small muted">Unpaid calls get <span class="mono">402</span> with a price. Paid calls are checked before your code runs. Register with <span class="mono">POST /api/sellers/register</span>.</p>
+      </div>
+      <div class="card">
+        <p class="eyebrow">Let any MCP agent buy, within your limits</p>
+        <pre class="code">{
+  "mcpServers": {
+    "agentpay": {
+      "command": "node",
+      "args": ["mcp/agentpay-mcp.mjs"],
+      "env": {
+        "AGENTPAY_URL": "http://localhost:3000",
+        "AGENTPAY_API_KEY": "..."
+      }
+    }
+  }
+}</pre>
+        <p class="small muted">Adds search, budget and buy tools to Claude Desktop, Cursor or any MCP client.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <span>AgentPay · Build What's Next with PayPal and AI</span>
+  <span>PayPal Orders · Refunds · Payouts · JS SDK · Webhooks</span>
+  <span>Claude via Anthropic API</span>
+  <span>AG Grid Community</span>
+</footer>
+
+<div id="drawerRoot"></div>
+<div class="sr-only" aria-live="assertive" id="announcer"></div>
+
+<script src="/network.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

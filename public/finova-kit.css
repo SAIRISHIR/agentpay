@@ -1,0 +1,123 @@
+/* Finova design kit: monochrome, BlackRock-style, dense and quiet.
+   Drop this file into any project. No dependencies, no build step. */
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --fill: #f4f4f5;      /* hover, table selection, status bar */
+  --fill-2: #e8e8ed;    /* tracks, pressed */
+  --ink: #1d1d1f;       /* text and primary buttons */
+  --ink-2: #636366;     /* secondary text, labels */
+  --ink-3: #aeaeb2;     /* disabled, hints */
+  --line: rgba(0, 0, 0, 0.08);
+  /* Colour carries meaning only: good, bad, warn. Never decoration. */
+  --good: #1a7f4b;  --good-soft: rgba(26, 127, 75, 0.11);
+  --bad:  #c2410c;  --bad-soft:  rgba(194, 65, 12, 0.10);
+  --warn: #9a5b00;  --warn-soft: rgba(201, 129, 0, 0.13);
+  --radius: 6px;
+  --radius-sm: 4px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;  --card: #1c1c1e;  --fill: #2c2c2e;  --fill-2: #3a3a3c;
+    --ink: #f5f5f7;  --ink-2: #a1a1a6;  --ink-3: #636366;
+    --line: rgba(255, 255, 255, 0.1);
+    --good: #4cd38a;  --good-soft: rgba(76, 211, 138, 0.14);
+    --bad: #ff8a65;   --bad-soft: rgba(255, 138, 101, 0.14);
+    --warn: #ffb547;  --warn-soft: rgba(255, 181, 71, 0.14);
+  }
+}
+
+/* ---------- 2. Base type: small, tight, tabular ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
+.display  { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; letter-spacing: -0.035em; font-weight: 600; }
+.headline { font-size: 26px; }
+.lede     { font-size: 15px; color: var(--ink-2); }
+.eyebrow  { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.muted    { color: var(--ink-2); }
+.small    { font-size: 12px; }
+.num      { font-variant-numeric: tabular-nums; }
+a { color: inherit; text-decoration-color: var(--ink-3); text-underline-offset: 3px; }
+
+/* ---------- 3. Surfaces ---------- */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+
+/* ---------- 4. Buttons: outlined, square-ish; primary is solid ink ---------- */
+.btn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 14px; font: inherit; font-size: 13px; font-weight: 500;
+  color: var(--ink); background: transparent; border: 1px solid var(--ink); border-radius: var(--radius-sm); cursor: pointer; text-decoration: none;
+  transition: background-color 0.15s var(--ease), transform 0.1s var(--ease); }
+.btn:hover { background: var(--fill); }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn.primary:hover { filter: brightness(1.15); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ---------- 5. Segmented control ---------- */
+.segmented { display: inline-flex; gap: 2px; padding: 2px; background: var(--fill); border-radius: var(--radius-sm); }
+.segmented button { font: inherit; font-size: 12.5px; padding: 4px 12px; border: 0; background: transparent; color: var(--ink); border-radius: var(--radius-sm); cursor: pointer; }
+.segmented button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* ---------- 6. KPI strip: one bordered row, hairline dividers ---------- */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.kpi { padding: 14px 16px; border-left: 1px solid var(--line); }
+.kpi:first-child { border-left: 0; }
+.kpi .k { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
+.kpi .v { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 4px; }
+.kpi .s { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.kpi .bar { height: 4px; border-radius: 2px; background: var(--fill-2); margin-top: 8px; position: relative; overflow: hidden; }
+.kpi .bar i { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+.kpi.bad .v { color: var(--bad); }
+
+/* ---------- 7. Dense data table: uppercase header, black rule under it, hairlines between rows ---------- */
+.dt { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dt th { position: sticky; top: 0; background: var(--card); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--ink-2); text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+.dt td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.dt td.n, .dt th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.dt tbody tr[data-id] { cursor: pointer; }
+.dt tbody tr:hover td, .dt tr.sel td { background: var(--fill); }
+.dt tr.flash td { animation: flash 1.2s ease; }       /* live row arrives */
+@keyframes flash { from { background: var(--fill-2); } to { background: transparent; } }
+.wrap-any { overflow-wrap: anywhere; }                 /* long URLs and keys */
+
+/* ---------- 8. Status pills: tiny, uppercase, meaning only ---------- */
+.pill { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+.pill.pass   { color: var(--ink-2); background: var(--fill); }
+.pill.good   { color: var(--good);  background: var(--good-soft); }
+.pill.warn   { color: var(--warn);  background: var(--warn-soft); }
+.pill.bad    { color: #fff;         background: var(--bad); }
+.pill.info   { color: var(--bg);    background: var(--ink); }
+
+/* ---------- 9. Console shell: black sidebar, status bar, sticky toolbar ---------- */
+.sidebar { background: #000; color: #fff; padding: 22px 14px; }
+.nav-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8e8e93; padding: 0 10px 4px; }
+.nav a { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 5px 10px; font-size: 13.5px; color: #d1d1d6; border-radius: 4px; text-decoration: none; }
+.nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.nav a[aria-current="page"] { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.statusbar { display: flex; align-items: center; gap: 14px; padding: 6px 32px; font-size: 12px; color: var(--ink-2); border-bottom: 1px solid var(--line); background: var(--fill); }
+.statusbar .spacer { flex: 1; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+/* ---------- 10. Guided-tour card: inverted (black) so it floats above any page ---------- */
+.tour { position: fixed; z-index: 60; right: 20px; bottom: 20px; width: min(380px, calc(100vw - 32px)); padding: 18px; background: #000; color: #fff;
+  border: 1px solid #333; border-radius: var(--radius); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35); animation: rise 0.22s var(--ease) both; }
+.tour h2 { font-size: 17px; margin: 6px 0 8px; }
+.tour p { margin: 0; font-size: 13.5px; line-height: 1.55; color: #d1d1d6; }
+.tour-dots { display: flex; gap: 4px; margin: 14px 0; }
+.tour-dots i { flex: 1; height: 3px; background: #333; border-radius: 2px; }
+.tour-dots i.on { background: #fff; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- 11. Accessibility ---------- */
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+@media (prefers-contrast: more) { :root { --line: rgba(0, 0, 0, 0.4); } }
+@media (max-width: 900px) { .statusbar { padding: 6px 16px; } }

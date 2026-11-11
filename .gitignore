@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.env
+data/
+_legacy/
+backend/
+agents/
+.taste-skill/
+*.log
