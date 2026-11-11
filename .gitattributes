@@ -1,0 +1,4 @@
+# Keep line endings consistent between Windows and the Linux servers (Render, GitHub Actions).
+* text=auto eol=lf
+*.png binary
+*.jpg binary

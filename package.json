@@ -13,7 +13,7 @@
     "reset": "node -e \"require('fs').rmSync('data',{recursive:true,force:true});console.log('Ledger reset')\""
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",

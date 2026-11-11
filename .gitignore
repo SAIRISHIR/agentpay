@@ -1,9 +1,38 @@
-node_modules/
+# ---- Secrets: never commit keys ----
+# API keys (PayPal, Anthropic) live only in .env on your machine and in Render's dashboard.
 .env
+.env.*
 *.env
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials*.json
+
+# ---- Dependencies ----
+node_modules/
+
+# ---- Runtime data (wallets, payments, run logs) ----
 data/
+*.log
+npm-debug.log*
+
+# ---- Old prototypes kept only on this machine (they have their own .env files) ----
 _legacy/
 backend/
 agents/
+
+# ---- Local tool output ----
 .taste-skill/
-*.log
+coverage/
+.cache/
+
+# ---- Editors and OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
