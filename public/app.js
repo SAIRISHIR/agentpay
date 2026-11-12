@@ -335,24 +335,35 @@ function spendOptions(escrows) {
   let paid = 0, refunded = 0;
   // x is the running count of judged payments: runs span days with idle gaps, so clock time
   // would squash every run into a vertical step.
-  const data = done.map((e, i) => {
+  // Start both lines at zero so even one payment draws a visible line.
+  const data = [{ n: 0, at: done.length ? finalAt(done[0]) : Date.now(), paid: 0, refunded: 0, what: 'Start', ok: true, start: true }];
+  done.forEach((e, i) => {
     if (e.status === 'released') paid += e.priceCents; else refunded += e.priceCents;
-    return { n: i + 1, at: finalAt(e), paid: paid / 100, refunded: refunded / 100, what: `${e.serviceName} from ${e.sellerName}`, ok: e.status === 'released' };
+    data.push({ n: i + 1, at: finalAt(e), paid: paid / 100, refunded: refunded / 100, what: `${e.serviceName} from ${e.sellerName}`, ok: e.status === 'released' });
   });
-  const tip = key => ({ renderer: ({ datum }) => ({
+  // Demo amounts are cents, so label small values in cents instead of "$0.00".
+  const top = Math.max(paid, refunded) / 100;
+  const yMax = top < 0.1 ? Math.max(0.05, Math.ceil(top * 100 * 1.25) / 100) : undefined;
+  const fmt = v => (top < 1 ? `${Math.round(v * 100)}¢` : USD.format(v));
+  const tip = key => ({ renderer: ({ datum }) => (datum.start ? { title: 'Start', content: 'Nothing paid or refunded yet' } : {
     title: `Payment ${datum.n} · ${clock(new Date(datum.at).toISOString())}`,
     content: `${esc(datum.what)}: ${datum.ok ? 'paid' : 'refunded'}<br>${key === 'paid' ? 'Paid' : 'Refunded'} so far: ${USD.format(datum[key])}`,
   }) });
   const line = (key, name, stroke, dash) => ({
     type: 'line', xKey: 'n', yKey: key, yName: `${name} · ${USD.format(key === 'paid' ? paid / 100 : refunded / 100)}`,
-    stroke, strokeWidth: 2, lineDash: dash, marker: { enabled: false, fill: stroke, stroke }, tooltip: tip(key),
+    stroke, strokeWidth: 2.5, lineDash: dash, marker: { enabled: done.length <= 30, size: 7, fill: stroke, stroke }, tooltip: tip(key),
   });
+  const count = done.length;
   return {
     container: $('chartSpend'), theme: chartTheme([c.paid, c.refunded]), data,
     series: [line('paid', 'Paid for good work', c.paid, []), line('refunded', 'Refunded for bad work', c.refunded, [6, 4])],
     axes: [
-      { type: 'number', position: 'bottom', nice: false, min: 1, max: Math.max(2, data.length), label: { formatter: ({ value }) => `#${Math.round(value)}` }, title: { enabled: true, text: 'Judged payments, in order', color: tok('ink-2'), fontSize: 12 }, gridLine: { enabled: false } },
-      { type: 'number', position: 'left', nice: true, min: 0, label: { formatter: ({ value }) => USD.format(value) } },
+      { type: 'number', position: 'bottom', nice: false, min: 0, max: Math.max(1, count),
+        interval: { step: Math.max(1, Math.ceil(count / 8)) },
+        // AG Charts can pass tick values as strings, so coerce before checking.
+        label: { formatter: ({ value }) => { const v = Number(value); return Number.isInteger(v) ? (v === 0 ? 'Start' : `#${v}`) : ''; } },
+        title: { enabled: true, text: 'Judged payments, in order', color: tok('ink-2'), fontSize: 12 }, gridLine: { enabled: false } },
+      { type: 'number', position: 'left', nice: yMax == null, min: 0, max: yMax, label: { formatter: ({ value }) => fmt(value) } },
     ],
     legend: { position: 'bottom' },
   };
@@ -378,7 +389,8 @@ function qualityOptions(escrows) {
       tooltip: { renderer: ({ datum }) => ({ title: esc(datum.name), content: `${datum.pass}% passed · ${datum.jobs} checked<br>Average price ${USD.format(datum.price / 100)}` }) },
     }],
     axes: [
-      { type: 'number', position: 'bottom', nice: true, min: 0, label: { formatter: ({ value }) => `${value}¢` } },
+      // One cent of headroom so the right-most bubble keeps its label.
+      { type: 'number', position: 'bottom', nice: false, min: 0, max: Math.ceil(Math.max(1, ...data.map(d => d.price))) + 1, interval: { step: 1 }, label: { formatter: ({ value }) => `${value}¢` } },
       { type: 'number', position: 'left', min: 0, max: 112, interval: { step: 20 }, label: { formatter: ({ value }) => (value > 100 ? '' : `${value}%`) } },
     ],
     legend: { enabled: false },
@@ -397,8 +409,9 @@ function renderTrends(escrows) {
   if (!judged) return;
   const spend = spendOptions(escrows), quality = qualityOptions(escrows);
   S.charts = S.charts || {};
-  if (S.charts.spend) S.charts.spend.update(spend); else S.charts.spend = lib.create(spend);
-  if (S.charts.quality) S.charts.quality.update(quality); else S.charts.quality = lib.create(quality);
+  // AG Charts 9.x updates through the static API; instances have no update() method.
+  if (S.charts.spend) lib.update(S.charts.spend, spend); else S.charts.spend = lib.create(spend);
+  if (S.charts.quality) lib.update(S.charts.quality, quality); else S.charts.quality = lib.create(quality);
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => renderTrends([...S.escrows.values()]));
 
